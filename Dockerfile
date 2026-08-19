@@ -35,6 +35,7 @@ ENV PAYLOAD_DATABASE_PUSH=$PAYLOAD_DATABASE_PUSH
 
 RUN pnpm generate:importmap
 RUN pnpm generate:types
+RUN pnpm payload migrate:fresh --force-accept-warning
 RUN pnpm run build
 
 FROM base AS runner
