@@ -68,6 +68,8 @@ Open `/admin` to access the CMS admin panel.
 
 ## Production Checks
 
+Production deployment and Docker/GitHub Actions workflow are documented in [`PRODUCTION_WORKFLOW.md`](./PRODUCTION_WORKFLOW.md).
+
 ```bash
 pnpm generate:importmap
 pnpm generate:types

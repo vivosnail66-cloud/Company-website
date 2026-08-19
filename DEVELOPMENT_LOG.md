@@ -56,3 +56,57 @@ npx vitest run          # 9 tests 全过(含 icon 同步检查)
 - 后续多语言:locale.ts 加语言即可,语言下拉 UI 自动列出
 - 桌面 mega menu 展开为 click(与 6 种参考风格一致);若后续要 hover 模式,改 `Nav/index.tsx` toggle 逻辑即可
 - `headerActions` 字段目前是 label+url 简单结构;若 CTA 需要 internal reference 链接,升级为 `optionalLink()` 工厂
+
+---
+
+# DEVELOPMENT_LOG — 云端生产编译打包流程
+
+日期:2026-08-19
+项目:gotocosmic-cms v3 (Next.js + Payload CMS)
+
+## 根因 / 背景
+
+项目需要在 GitHub Actions 云端完成 Next.js + Payload CMS 编译打包,并验证 Docker 镜像构建。原 workflow 使用 npm,但项目实际是 pnpm;Dockerfile 依赖 `.next/standalone`,但 Next 未启用 standalone 输出;Payload 前台页面在 build 阶段枚举内容路由会查询数据库内容表,CI 临时库没有生产内容;Docker deps 阶段没有复制 `pnpm-workspace.yaml`,导致 pnpm 10 不读取 native dependency build allowlist。
+
+## 改动清单
+
+- `next.config.ts` — 启用 `output: 'standalone'`。
+- `Dockerfile` — 改为 pnpm 多阶段构建,复制 `pnpm-workspace.yaml`,生成 Payload import map/types,复制 `.next/standalone` 与 `.next/static` 到运行镜像。
+- `.dockerignore` — 排除 `.env`、`.next`、`node_modules`、本地媒体、生成 sitemap 和构建缓存。
+- `.github/workflows/payload-build.yml` — 配置 PostgreSQL 16 service、pnpm/Node 22.17.0、import map/types/typecheck/Next build/Docker build 全流程。
+- `src/Header/config.ts` + `src/Header/RowLabel.tsx` — 修复 Payload admin row label 类型和缺失组件,解除类型检查阻塞。
+- `src/app/(frontend)/**` 内容页 — 对 Payload 内容查询路径使用运行时动态渲染;CI/Docker build 通过 `SKIP_PAYLOAD_STATIC_PARAMS=true` 跳过静态参数枚举。
+- `src/payload.config.ts` — 增加 `PAYLOAD_DATABASE_PUSH` 临时开关,仅供 CI/一次性构建库使用;生产不依赖它。
+- `PRODUCTION_WORKFLOW.md` — 新增生产工作流程文档。
+- `README.md` — 增加生产流程文档入口。
+
+## 临时开关
+
+- `SKIP_PAYLOAD_STATIC_PARAMS=true`:CI/Docker build 专用,避免构建期查询 Payload 内容表;运行时不需要设置。
+- `PAYLOAD_DATABASE_PUSH=true`:CI 临时库专用,生产禁用,生产 schema 变更走 migrations。
+
+## 验证方式
+
+```bash
+pnpm generate:importmap
+pnpm generate:types
+pnpm exec tsc --noEmit
+pnpm run build
+```
+
+云端验证:
+
+```txt
+Commit: d77592c8d32a732bbefb2658ffa67276f32badf7
+Workflow: Payload CMS Build
+Run: https://github.com/vivosnail66-cloud/Company-website/actions/runs/32232225516
+Result: success
+```
+
+通过步骤包含 `Build Next.js and Payload CMS` 与 `Build Docker image`。
+
+## 遗留 / 后续
+
+- 生产上线前必须配置真实 `DATABASE_URL`、`PAYLOAD_SECRET`、`CRON_SECRET`、`PREVIEW_SECRET`、`NEXT_PUBLIC_SERVER_URL`。
+- 生产 schema 变更必须生成并执行 Payload migrations,不要用 `PAYLOAD_DATABASE_PUSH` 替代。
+- 若要推送镜像到 registry,在 workflow 的 `docker/build-push-action` 中增加登录和 `push: true`。
