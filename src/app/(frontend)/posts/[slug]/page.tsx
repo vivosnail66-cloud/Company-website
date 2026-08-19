@@ -17,7 +17,11 @@ import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { defaultLocale, toPayloadLocale, type AppLocale } from '@/utilities/locale'
 import { getRequestLocale } from '@/utilities/getRequestLocale'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
+  if (process.env.SKIP_PAYLOAD_STATIC_PARAMS === 'true') return []
+
   const payload = await getPayload({ config: configPromise })
   const posts = await payload.find({
     collection: 'posts',

@@ -17,6 +17,8 @@ import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 import { getRequestLocale } from '@/utilities/getRequestLocale'
 
+export const dynamic = 'force-dynamic'
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
   const locale = await getRequestLocale()

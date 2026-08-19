@@ -13,6 +13,7 @@ import { getRequestLocale } from '@/utilities/getRequestLocale'
 import { getResolvedSiteSettings } from '@/SiteSettings/getSiteSettings'
 import { resolveMetaTitle } from '@/SiteSettings/seo'
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 600
 
 type Args = {
@@ -79,6 +80,8 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
 }
 
 export async function generateStaticParams() {
+  if (process.env.SKIP_PAYLOAD_STATIC_PARAMS === 'true') return []
+
   const payload = await getPayload({ config: configPromise })
   const { totalDocs } = await payload.count({
     collection: 'posts',

@@ -12,7 +12,7 @@ import { getRequestLocale } from '@/utilities/getRequestLocale'
 import { getResolvedSiteSettings } from '@/SiteSettings/getSiteSettings'
 import { resolveMetaTitle } from '@/SiteSettings/seo'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 export const revalidate = 600
 
 export default async function Page() {
