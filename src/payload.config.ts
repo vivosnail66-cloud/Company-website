@@ -75,6 +75,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
+    push: process.env.PAYLOAD_DATABASE_PUSH === 'true',
   }),
   collections: [
     Pages,

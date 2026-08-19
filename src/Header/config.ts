@@ -53,6 +53,20 @@ export type HeaderVariant = (typeof HEADER_VARIANTS)[number]['value']
 export type NavItemType = (typeof NAV_ITEM_TYPES)[number]['value']
 export type MegaMenuLayout = (typeof MEGA_MENU_LAYOUTS)[number]['value']
 
+const optionalNavLink = () => {
+  const field = optionalLink({ name: 'link', label: 'Link' })
+
+  if (field.type !== 'group') return field
+
+  return {
+    ...field,
+    admin: {
+      ...field.admin,
+      condition: (_: unknown, siblingData: { type?: string }) => siblingData?.type !== 'megaMenu',
+    },
+  }
+}
+
 export const Header: GlobalConfig = {
   slug: 'header',
   access: {
@@ -107,10 +121,10 @@ export const Header: GlobalConfig = {
                   admin: {
                     description:
                       'Items shown in the header nav row, in order. One row = one top-level item. Pick "Link" for a plain link (Home, Blog, About…) or "Mega Menu" to configure a dropdown for that item.',
-                    initCollapsedState: () => true,
+                    initCollapsed: true,
                     components: {
                       RowLabel: '@/Header/RowLabel#NavItemRowLabel',
-                    },
+                    } as never,
                   },
                   fields: [
                     {
@@ -133,13 +147,7 @@ export const Header: GlobalConfig = {
                       },
                     },
                     // --- Type: Link -------------------------------------------------
-                    {
-                      ...optionalLink({ name: 'link', label: 'Link' }),
-                      admin: {
-                        hideGutter: true,
-                        condition: (_, siblingData) => siblingData?.type !== 'megaMenu',
-                      },
-                    },
+                    optionalNavLink(),
                     // --- Type: Mega Menu ---------------------------------------------
                     {
                       name: 'megaMenuLayout',
@@ -193,7 +201,7 @@ export const Header: GlobalConfig = {
                         description: 'Titled columns of items (used by the "Grouped" layouts).',
                         components: {
                           RowLabel: '@/Header/RowLabel#MegaMenuGroupRowLabel',
-                        },
+                        } as never,
                       },
                       fields: [
                         {
